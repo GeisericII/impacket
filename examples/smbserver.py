@@ -84,7 +84,6 @@ if __name__ == '__main__':
         logging.info('Switching output to file %s' % options.outputfile)
         server.setLogFile(options.outputfile)
 
-    server.addShare(options.shareName.upper(), options.sharePath, comment)
     server.addShare(options.shareName.upper(), options.sharePath, comment, readOnly=readonly)
     server.setSMB2Support(options.smb2support)
     server.setDropSSP(options.dropssp)
