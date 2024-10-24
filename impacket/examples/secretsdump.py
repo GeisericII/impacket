@@ -1,6 +1,8 @@
 # Impacket - Collection of Python classes for working with network protocols.
 #
-# Copyright (C) 2023 Fortra. All rights reserved.
+# Copyright Fortra, LLC and its affiliated companies 
+#
+# All rights reserved.
 #
 # This software is provided under a slightly modified version
 # of the Apache Software License. See the accompanying LICENSE file
@@ -59,7 +61,7 @@ import string
 import time
 from binascii import unhexlify, hexlify
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from struct import unpack, pack
 from six import b, PY2
 
@@ -1650,7 +1652,7 @@ class LSASecrets(OfflineRegistry):
                 userName = plainText[:record['UserLength']].decode('utf-16le')
                 plainText = plainText[self.__pad(record['UserLength']) + self.__pad(record['DomainNameLength']):]
                 domainLong = plainText[:self.__pad(record['DnsDomainNameLength'])].decode('utf-16le')
-                timestamp = datetime.utcfromtimestamp(getUnixTime(record['LastWrite']))
+                timestamp = datetime.fromtimestamp(getUnixTime(record['LastWrite']), tz=timezone.utc)
 
                 if self.__vistaStyle is True:
                     answer = "%s/%s:$DCC2$%s#%s#%s: (%s)" % (domainLong, userName, iterationCount, userName, hexlify(encHash).decode('utf-8'), timestamp)
@@ -2994,10 +2996,10 @@ class KeyListSecrets:
         encTicketPart['transited'] = noValue
         encTicketPart['transited']['tr-type'] = 0
         encTicketPart['transited']['contents'] = ''
-        encTicketPart['authtime'] = KerberosTime.to_asn1(datetime.utcnow())
-        encTicketPart['starttime'] = KerberosTime.to_asn1(datetime.utcnow())
+        encTicketPart['authtime'] = KerberosTime.to_asn1(datetime.now(timezone.utc))
+        encTicketPart['starttime'] = KerberosTime.to_asn1(datetime.now(timezone.utc))
         # Let's extend the ticket's validity a lil bit
-        ticketDuration = datetime.utcnow() + timedelta(days=int(120))
+        ticketDuration = datetime.now(timezone.utc) + timedelta(days=int(120))
         encTicketPart['endtime'] = KerberosTime.to_asn1(ticketDuration)
         encTicketPart['renew-till'] = KerberosTime.to_asn1(ticketDuration)
         # We don't need PAC
@@ -3033,7 +3035,7 @@ class KeyListSecrets:
 
         seq_set(authenticator, 'cname', userName.components_to_asn1)
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         authenticator['cusec'] = now.microsecond
         authenticator['ctime'] = KerberosTime.to_asn1(now)
 
@@ -3071,7 +3073,7 @@ class KeyListSecrets:
         reqBody['sname']['name-string'][1] = self.__domain
         reqBody['realm'] = self.__domain
 
-        now = datetime.utcnow() + timedelta(days=1)
+        now = datetime.now(timezone.utc) + timedelta(days=1)
 
         reqBody['till'] = KerberosTime.to_asn1(now)
         reqBody['nonce'] = rand.getrandbits(31)
