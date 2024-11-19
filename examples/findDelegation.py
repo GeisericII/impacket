@@ -90,6 +90,9 @@ class FindDelegation:
         #[!] in this script the value of -dc-ip option is self.__kdcIP and the value of -dc-host option is self.__kdcHost
         self.__kdcIP = cmdLineOptions.dc_ip
         self.__kdcHost = cmdLineOptions.dc_host
+        self.__stealth = False
+        if (cmdLineOptions.stealth):
+            self.__stealth = True
         if cmdLineOptions.hashes is not None:
             self.__lmhash, self.__nthash = cmdLineOptions.hashes.split(':')
 
@@ -172,7 +175,11 @@ class FindDelegation:
                                          "must match exactly each other")
                 raise
 
-        searchFilter = "(&(|(UserAccountControl:1.2.840.113556.1.4.803:=16777216)(UserAccountControl:1.2.840.113556.1.4.803:=" \
+        if (self.__stealth):
+            searchFilter = "(objectClass=*)"
+            logging.info("Stealth mode activated, getting all the objects")
+        else:
+            searchFilter = "(&(|(UserAccountControl:1.2.840.113556.1.4.803:=16777216)(UserAccountControl:1.2.840.113556.1.4.803:=" \
                        "524288)(msDS-AllowedToDelegateTo=*)(msDS-AllowedToActOnBehalfOfOtherIdentity=*))" \
                        "(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))"
 
@@ -303,6 +310,7 @@ if __name__ == '__main__':
     group.add_argument('-dc-host', action='store', metavar='hostname', help='Hostname of the domain controller to use. '
                                                                               'If ommited, the domain part (FQDN) '
                                                                               'specified in the account parameter will be used')
+    group.add_argument('-stealth', action='store_true', help='Change the filter to request every domain object, parsing will be much slower')
 
     if len(sys.argv)==1:
         parser.print_help()
